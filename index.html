@@ -148,7 +148,7 @@ addEventListener('keyup',e=>{if(G.keys)G.keys[e.code]=0});
 function begin(){setup();G.mode='count';$('menu').style.display=$('end').style.display='none';$('hud').style.display='flex'}
 $('again').onclick=begin;
 $('tomenu').onclick=()=>{setup();$('end').style.display='none';$('hud').style.display='none';$('menu').style.display='flex'};
-function finish(){$('tc').style.display='none';G.mode='done';const b=best();let s=G.t.toFixed(2)+'s';
+function finish(){G.mode='done';const b=best();let s=G.t.toFixed(2)+'s';
  if(!b||G.t<b){try{localStorage.setItem('br'+sel.track,G.t)}catch(e){}s+=' (new best!)'}else s+=' (best '+b.toFixed(2)+'s)';
  let m=pname+': '+s+' on '+TRACKS[sel.track].n+'.';
  if(chal&&chal.t==sel.track)m+=G.t<chal.s?' You beat '+chal.n+' by '+(chal.s-G.t).toFixed(2)+'s!':' '+chal.n+' still wins by '+(G.t-chal.s).toFixed(2)+'s.';
