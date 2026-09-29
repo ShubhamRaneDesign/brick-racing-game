@@ -131,7 +131,7 @@ function buildTrack(t){
   const c=cols[n%4],h=1+(rnd()*3|0);for(let j=0;j<h;j++){box(2,1,4,c,x,.5+j,z,trackG);studs(trackG,2,4,1+j,c)}}
  S.add(trackG)}
 // game state
-const sel={car:0,track:0};let chal=null,pname='';const GAME_URL='https://claude.ai/artifact/Q4mKV4d3foKtoVPd9jxaHc';let G={};
+const sel={car:0,track:0};let chal=null,pname='';const GAME_URL='https://brick-racing-game.vercel.app/';let G={};
 function mk(el,arr,key){el.innerHTML='';arr.forEach((a,i)=>{const b=document.createElement('button');b.className='opt'+(sel[key]==i?' sel':'');
  b.innerHTML=(a.c?`<span class="chip" style="background:#${a.c.toString(16).padStart(6,'0')}"></span>`:'')+a.n+`<small>${a.d}</small>`;
  b.onclick=()=>{sel[key]=i;setup();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track')};el.appendChild(b)})}
@@ -153,14 +153,14 @@ function finish(){G.mode='done';const b=best();let s=G.t.toFixed(2)+'s';
  let m=pname+': '+s+' on '+TRACKS[sel.track].n+'.';
  if(chal&&chal.t==sel.track)m+=G.t<chal.s?' You beat '+chal.n+' by '+(chal.s-G.t).toFixed(2)+'s!':' '+chal.n+' still wins by '+(G.t-chal.s).toFixed(2)+'s.';
  $('es').textContent=m;
- const code=btoa(encodeURIComponent(JSON.stringify({n:pname,t:sel.track,s:+G.t.toFixed(2)})));
- $('lnk').value=pname+' did '+G.t.toFixed(2)+'s on '+TRACKS[sel.track].n+' in Brick Racers. Beat me!\n'+GAME_URL+'\nChallenge code (paste it on the start screen): '+code;
+ const code=sel.track+'-'+Math.round(G.t*100)+'-'+pname;
+ $('lnk').value='I did '+G.t.toFixed(2)+'s on '+TRACKS[sel.track].n+' in Brick Racers. Beat me!\n'+GAME_URL+'\nChallenge code (paste it on the start screen): '+code;
  $('sh').textContent='';$('end').style.display='flex'}
 $('share').onclick=async()=>{const t=$('lnk').value;try{if(navigator.share){await navigator.share({text:t});return}}catch(e){}
  try{await navigator.clipboard.writeText(t);$('sh').textContent='Copied! Send it to a friend.'}catch(e){$('lnk').select();$('sh').textContent='Copy the text above and send it to a friend.'}};
 const K=c=>G.keys[c]?1:0,up=new THREE.Vector3(0,1,0),clk=new THREE.Clock();
 function showChal(){$('chb').textContent=chal?chal.n+' challenges you: beat '+chal.s.toFixed(2)+'s on '+TRACKS[chal.t].n+'!':''}
-$('cc').oninput=()=>{const v=$('cc').value.trim();chal=null;try{if(v){const o=JSON.parse(decodeURIComponent(atob(v)));if(TRACKS[o.t|0]&&isFinite(o.s)){chal={n:String(o.n).slice(0,16),t:o.t|0,s:+o.s};sel.track=chal.t;setup();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track')}}}catch(e){}
+$('cc').oninput=()=>{const v=$('cc').value.trim();chal=null;try{if(v){const m=v.match(/^(\d)-(\d+)-(.+)$/);if(m&&TRACKS[+m[1]]&&+m[2]>0){chal={n:m[3].slice(0,16),t:+m[1],s:+m[2]/100};sel.track=chal.t;setup();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track')}}}catch(e){}
  showChal();if(v&&!chal)$('chb').textContent='That code looks invalid.'};
 $('start').onclick=()=>{const n=$('nm').value.trim();if(!n){$('nm').focus();$('nmh').textContent='Enter your name to race.';return}
  pname=n.slice(0,16);try{localStorage.setItem('brName',pname)}catch(e){}$('nmh').textContent='';begin()};
