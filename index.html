@@ -154,7 +154,7 @@ function finish(){G.mode='done';const b=best();let s=G.t.toFixed(2)+'s';
  if(chal&&chal.t==sel.track)m+=G.t<chal.s?' You beat '+chal.n+' by '+(chal.s-G.t).toFixed(2)+'s!':' '+chal.n+' still wins by '+(G.t-chal.s).toFixed(2)+'s.';
  $('es').textContent=m;
  const code=sel.track+'-'+Math.round(G.t*100)+'-'+pname;
- $('lnk').value='I did '+G.t.toFixed(2)+'s on '+TRACKS[sel.track].n+' in Brick Racers. Beat me!\n'+GAME_URL+'\nChallenge code (paste it on the start screen): '+code;
+ $('lnk').value='I did '+G.t.toFixed(2)+'s on '+TRACKS[sel.track].n+' in Brick Racers. Beat me!\n'+GAME_URL+'?c='+encodeURIComponent(code);
  $('sh').textContent='';$('end').style.display='flex'}
 $('share').onclick=async()=>{const t=$('lnk').value;try{if(navigator.share){await navigator.share({text:t});return}}catch(e){}
  try{await navigator.clipboard.writeText(t);$('sh').textContent='Copied! Send it to a friend.'}catch(e){$('lnk').select();$('sh').textContent='Copy the text above and send it to a friend.'}};
@@ -200,5 +200,7 @@ function frame(){requestAnimationFrame(frame);$('mobblock').style.display=MOB?'f
  cam.fov=65+Math.min(G.v,40)*.25;cam.updateProjectionMatrix();
  $('lap').textContent='LAP '+G.lap+'/'+LAPS;$('tm').textContent=G.t.toFixed(1)+'s';$('sp').textContent=Math.round(G.v*4)+' km/h';$('cam').textContent=(Lc?'Side view':CAMS[G.camI]);
  R.render(S,cam)}
-setup();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track');try{$('nm').value=localStorage.getItem('brName')||''}catch(e){}frame();
+setup();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track');try{$('nm').value=localStorage.getItem('brName')||''}catch(e){}
+try{const c=new URLSearchParams(location.search).get('c');if(c){$('cc').value=c;$('cc').oninput()}}catch(e){}
+frame();
 </script></body></html>
