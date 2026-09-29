@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brick Racers</title>
+<style>
+:root{--bg:#0d2a55;--panel:#fff8e1;--ink:#1a1a2e;--y:#ffd400;--r:#e3000b;--b:#0055bf;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#07142b;--panel:#1c2a48;--ink:#fff4c2}}
+:root[data-theme="dark"]{--bg:#07142b;--panel:#1c2a48;--ink:#fff4c2}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:auto;padding:12px}
+.card{background:var(--panel);border:4px solid var(--ink);border-radius:10px;box-shadow:0 8px 0 var(--ink);padding:18px;max-width:640px;width:100%}
+h1{margin:0 0 4px;font-size:clamp(28px,6vw,44px);letter-spacing:1px;color:var(--r);text-shadow:3px 3px 0 var(--ink)}
+h2{margin:14px 0 6px;font-size:16px}
+p{margin:4px 0;font-size:14px;line-height:1.4}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.opt{flex:1 1 130px;font:inherit;font-weight:700;padding:10px;background:#fff;color:#1a1a2e;border:3px solid #1a1a2e;border-radius:6px;cursor:pointer;text-align:left}
+.opt small{display:block;font-weight:400;font-size:12px}
+.opt.sel{background:var(--y);box-shadow:0 4px 0 #1a1a2e;transform:translateY(-2px)}
+.chip{display:inline-block;width:14px;height:14px;border:2px solid #1a1a2e;margin-right:6px;vertical-align:-2px}
+.go{margin-top:14px;width:100%;font:inherit;font-size:20px;font-weight:800;padding:12px;background:var(--r);color:#fff;border:3px solid #1a1a2e;border-radius:6px;box-shadow:0 5px 0 #1a1a2e;cursor:pointer}
+.go:focus-visible,.opt:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+#hud{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 8px);display:none;justify-content:space-between;padding:0 12px;pointer-events:none;font-weight:800;color:#fff;text-shadow:2px 2px 0 #1a1a2e;font-size:clamp(15px,3.5vw,24px)}
+#msg{position:fixed;left:0;right:0;top:32%;text-align:center;font-size:clamp(40px,12vw,110px);font-weight:900;color:var(--y);text-shadow:4px 4px 0 #1a1a2e;pointer-events:none}
+#qte{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);transform:translateX(-50%);display:none;text-align:center;font-weight:800;color:#fff;text-shadow:2px 2px 0 #1a1a2e}
+#qte b{display:inline-block;min-width:64px;padding:10px 16px;margin:4px;background:var(--y);color:#1a1a2e;border:4px solid #1a1a2e;border-radius:8px;box-shadow:0 5px 0 #1a1a2e;font-size:34px;text-shadow:none}
+#bar{height:10px;background:#1a1a2e;border-radius:5px;overflow:hidden}#bar i{display:block;height:100%;background:var(--r)}
+#menu{align-items:flex-end}#menu .card{max-height:58vh;overflow:auto;margin-bottom:6px}input,textarea{width:100%;box-sizing:border-box;font:inherit;padding:9px;border:3px solid #1a1a2e;border-radius:6px;background:#fff;color:#1a1a2e}#chb,#nmh,#sh{font-weight:800;color:var(--r);min-height:1em}
+.keys{display:flex;flex-wrap:wrap;gap:8px 18px;margin:6px 0}.keys span{display:flex;align-items:center;gap:4px;font-weight:700;font-size:14px}kbd{display:inline-block;min-width:26px;padding:3px 7px;text-align:center;font:700 13px "Trebuchet MS",sans-serif;background:#fff;color:#1a1a2e;border:2px solid #1a1a2e;border-bottom-width:4px;border-radius:5px}
+canvas{touch-action:none}.mob #qte{bottom:calc(env(safe-area-inset-bottom,0px) + 120px)}.mob #qte b{font-size:22px}
+#tc button{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:88px;height:88px;border-radius:50%;font:800 34px "Trebuchet MS",sans-serif;background:rgba(255,212,0,.88);color:#1a1a2e;border:4px solid #1a1a2e;box-shadow:0 5px 0 #1a1a2e;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#bl{left:16px}#br{left:120px}#bb{right:16px;background:rgba(227,0,11,.9)!important;color:#fff!important;font-size:16px!important}
+</style></head><body>
+<canvas id="c"></canvas>
+<div id="hud"><span id="lap"></span><span id="tm"></span><span id="sp"></span><span id="cam"></span></div>
+<div id="msg"></div>
+<div id="qte"><div>PRESS NOW!</div><b id="qk"></b><div id="bar"><i></i></div></div>
+<div id="tc" style="display:none"><button class="ctl" id="bl" aria-label="Steer left">◀</button><button class="ctl" id="br" aria-label="Steer right">▶</button><button class="ctl" id="bb">BRAKE</button></div>
+<div class="ov" id="menu"><div class="card">
+<h1>BRICK RACERS</h1><p>Build-block cars, orange tracks. Race 3 laps. No login.</p>
+<h2>Your name</h2><input id="nm" maxlength="16" placeholder="Enter your name" autocomplete="off"><p id="nmh"></p>
+<h2>How are you playing?</h2><div class="row"><button class="opt" id="mk">Keys<small>Computer or keyboard</small></button><button class="opt" id="mt">Touch<small>Phone or tablet, held sideways</small></button></div>
+<h2>Pick a car</h2><div class="row" id="cars"></div>
+<h2>Pick a track</h2><div class="row" id="tracks"></div>
+<h2>How to play</h2><div id="how">
+<div class="keys"><span><kbd>W</kbd><kbd>↑ Up</kbd> Gas</span><span><kbd>S</kbd><kbd>↓ Down</kbd> Brake</span><span><kbd>A</kbd><kbd>D</kbd> or <kbd>← Left</kbd><kbd>→ Right</kbd> Steer</span><span><kbd>Space</kbd><kbd>Q</kbd><kbd>E</kbd><kbd>F</kbd><kbd>R</kbd> Key prompts</span></div><p>Corners push you toward the edge, so steer against them.</p>
+<p>The camera flips between back view and top view every few seconds, and moves to the side for loops. Vertical loops need speed: hit them at 60+ km/h. Bridges slow you on the way up and speed you up on the way down. When a key prompt appears, hit it fast for a boost. Miss it and you spin out.</p>
+</div><h2>Have a challenge code?</h2><input id="cc" placeholder="Paste a friend's code (optional)" autocomplete="off"><p id="chb"></p>
+<button class="go" id="start">Start race</button></div></div>
+<div class="ov" id="end" style="display:none"><div class="card"><h1>FINISH!</h1><p id="es"></p>
+<h2>Challenge a friend</h2><textarea id="lnk" rows="4" readonly></textarea><p id="sh"></p>
+<button class="go" id="share" style="background:var(--b)">Challenge a friend</button>
+<button class="go" id="again">Race again</button><button class="go" id="tomenu" style="background:#555">Change car or track</button></div></div>
+<div id="rot" class="ov" style="display:none;z-index:50;background:var(--bg)"><div class="card" style="text-align:center"><h1>Rotate your screen</h1><p>Touch controls need landscape. Turn your device sideways to keep playing.</p><button class="go" id="rk" style="background:var(--b)">Use keys instead</button></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+let MOB=matchMedia('(pointer:coarse)').matches;const $=id=>document.getElementById(id),LAPS=3,W=4.5;
+const CARS=[
+{n:'Speedster',c:0xe3000b,L:4.2,W:2,H:.8,cab:1,sp:1,hd:1,x:'spoil',d:'Balanced'},
+{n:'Brick Truck',c:0x0055bf,L:4.6,W:2.3,H:1.3,cab:1.3,sp:.85,hd:.8,x:'bed',d:'Slow, sturdy'},
+{n:'Sunny Buggy',c:0xffd400,L:3.8,W:2.2,H:.7,cab:.8,sp:.92,hd:1.3,x:'roll',d:'Grips corners'},
+{n:'Green Rocket',c:0x00a651,L:5,W:1.8,H:.6,cab:.7,sp:1.12,hd:.75,x:'fin',d:'Fast, slippery'}];
+const TRACKS=[
+{n:'Brick Oval',d:'Easy · 2 loops',loops:2,bridges:2,p:[[-30,-15],[0,-25],[30,-15],[38,0],[30,15],[0,25],[-30,15],[-38,0]]},
+{n:'Zig Zag Yard',d:'Medium · 1 loop',loops:1,bridges:2,p:[[-35,-20],[-10,-30],[10,-15],[35,-28],[42,0],[25,20],[5,10],[-15,28],[-38,18],[-44,0]]},
+{n:'Snake Pit',d:'Hard · 2 loops',loops:2,bridges:3,p:[[-42,0],[-28,-26],[-8,-12],[10,-32],[36,-20],[42,6],[22,14],[30,34],[2,40],[-18,22],[-32,34]]}];
+const CAMS=['Back view','Top view'];
+const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:true}),S=new THREE.Scene(),cam=new THREE.PerspectiveCamera(65,1,.1,400);
+S.background=new THREE.Color(0x8fd3ff);S.fog=new THREE.Fog(0x8fd3ff,60,170);
+S.add(new THREE.AmbientLight(0xffffff,.75));const dl=new THREE.DirectionalLight(0xffffff,.8);dl.position.set(30,60,20);S.add(dl);
+function size(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener('resize',size);size();
+const M=c=>new THREE.MeshLambertMaterial({color:c});
+function box(w,h,d,c,x,y,z,p){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);p.add(m);return m}
+function cyl(r,h,c,x,y,z,p,rz){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,rz?16:10),M(c));m.position.set(x,y,z);if(rz)m.rotation.z=Math.PI/2;p.add(m)}
+function studs(p,w,d,y,c){for(let x=-w/2+.5;x<w/2;x++)for(let z=-d/2+.5;z<d/2;z++)cyl(.28,.2,c,x,y+.1,z,p)}
+// ground with studs
+const gr=new THREE.Mesh(new THREE.PlaneGeometry(150,150),M(0x2ea44f));gr.rotation.x=-Math.PI/2;S.add(gr);
+const st=new THREE.InstancedMesh(new THREE.CylinderGeometry(.5,.5,.3,10),M(0x3bb85f),75*75),dm=new THREE.Object3D();let k=0;
+for(let x=-74;x<75;x+=2)for(let z=-74;z<75;z+=2){dm.position.set(x,.1,z);dm.updateMatrix();st.setMatrixAt(k++,dm.matrix)}
+st.count=k;S.add(st);
+let carG,trackG,curve,len,pts=[];
+function buildCar(d){
+ if(carG)S.remove(carG);const g=new THREE.Group(),y=.55+d.H;
+ box(d.W,d.H,d.L,d.c,0,.55+d.H/2,0,g);studs(g,d.W,d.L,y,d.c);
+ box(d.W*.8,d.cab,d.L*.35,0xa9dcff,0,y+d.cab/2,d.L*.12,g);
+ for(const sx of[-1,1]){for(const sz of[-1,1]){cyl(.6,.5,0x222222,sx*(d.W/2+.1),.6,sz*d.L*.32,g,1);cyl(.3,.55,0xbbbbbb,sx*(d.W/2+.1),.6,sz*d.L*.32,g,1)}
+  box(.4,.3,.1,0xfff3a0,sx*d.W*.3,.55+d.H*.6,-d.L/2,g);box(.4,.3,.1,0xff2222,sx*d.W*.3,.55+d.H*.6,d.L/2,g)}
+ if(d.x=='spoil'){box(d.W,.15,.7,0x222222,0,y+.9,d.L/2-.2,g);box(.2,.9,.2,0x222222,0,y+.45,d.L/2-.2,g)}
+ if(d.x=='bed')box(d.W*.9,.9,d.L*.35,0x9c6b30,0,y+.45,d.L*.32,g);
+ if(d.x=='roll'){box(d.W,.2,.2,0x222222,0,y+1.3,d.L*.05,g);box(.2,1.3,.2,0x222222,-d.W*.4,y+.65,d.L*.05,g);box(.2,1.3,.2,0x222222,d.W*.4,y+.65,d.L*.05,g)}
+ if(d.x=='fin')box(.15,1.2,1,0xffffff,0,y+.6,d.L/2-.6,g);
+ carG=g;S.add(g)}
+const Vv=(x,y,z)=>new THREE.Vector3(x,y,z),RL=7,LD=12,ZP=28,SM=x=>x*x*(3-2*x),TP=Math.PI*2;
+let loops=[],bridges=[],gl=1,FR=[];const BH=18;
+function lp(L,th){return Vv(L.B.x+L.f.x*RL*Math.sin(th),RL*(1-Math.cos(th)),L.B.z+L.f.z*RL*Math.sin(th))}
+const gp=g=>curve.getPointAt(((g%gl)+gl)%gl/gl);
+const hh=g=>{g=((g%gl)+gl)%gl;let h=0;for(const c of bridges){let d=Math.abs(g-c);d=Math.min(d,gl-d);if(d<BH)h+=4*SM(Math.min(1,(1-d/BH)*2))}return h};
+const gpp=g=>{const p=gp(g);p.y=hh(g);return p};
+function pos(s){s=((s%len)+len)%len;let sh=0;for(const L of loops){const a=L.sa+sh;if(s<a)break;if(s<a+L.Ll)return lp(L,(s-a)/L.Ll*TP);sh+=L.Ll}return gpp(s-sh)}
+function fr(s){s=((s%len)+len)%len;const P=pos(s),T=pos(s+.1).sub(P).normalize();let In=null,sh=0;
+ for(const L of loops){const b=L.sa+sh;if(s<b)break;if(s<b+L.Ll){In=L;break}sh+=L.Ll}
+ let R,U;if(In){R=In.r.clone();R.addScaledVector(T,-R.dot(T)).normalize();U=R.clone().cross(T)}else{R=Vv(-T.z,0,T.x).normalize();U=R.clone().cross(T).normalize()}
+ return{P,T,R,U,In}}
+function ribbon(g,o1,o2,y,cf,N){const P=[],C=[],I=[];
+ for(let i=0;i<N;i++)for(let j=0;j<2;j++){const F=FR[i+j],c=new THREE.Color(cf(i));
+  for(const o of[o1,o2])P.push(F.P.x+F.R.x*o+F.U.x*y,F.P.y+F.R.y*o+F.U.y*y,F.P.z+F.R.z*o+F.U.z*y);
+  C.push(c.r,c.g,c.b,c.r,c.g,c.b);const a=(i*2+j)*2;if(j)I.push(a-2,a-1,a,a-1,a+1,a)}
+ const ge=new THREE.BufferGeometry();ge.setAttribute('position',new THREE.Float32BufferAttribute(P,3));ge.setAttribute('color',new THREE.Float32BufferAttribute(C,3));ge.setIndex(I);ge.computeVertexNormals();
+ g.add(new THREE.Mesh(ge,new THREE.MeshLambertMaterial({vertexColors:true,side:THREE.DoubleSide})))}
+function buildTrack(t){
+ if(trackG)S.remove(trackG);trackG=new THREE.Group();
+ curve=new THREE.CatmullRomCurve3(t.p.map(a=>Vv(a[0],0,a[1])),true);gl=curve.getLength();len=gl;loops=[];
+ const LC=2*RL+10,cand=[];for(let g=14;g<gl-14;g+=2){const t1=gp(g-5.5).sub(gp(g-6)).normalize(),t2=gp(g+6.5).sub(gp(g+6)).normalize();cand.push({g,e:Math.hypot(t1.x-t2.x,t1.z-t2.z)})}
+ cand.sort((a,b)=>a.e-b.e);const ch=[];
+ for(const c of cand){if(ch.length>=t.loops)break;if(ch.every(o=>{const d=Math.abs(o-c.g);return Math.min(d,gl-d)>Math.max(gl*.22,LC)}))ch.push(c.g)}
+ ch.sort((a,b)=>a-b);let sh=0;
+ for(const g of ch){const B=gp(g),f=gp(g+.5).sub(B);f.y=0;f.normalize();const r=Vv(-f.z,0,f.x),L={sa:g,sw:g+sh,B,f,r,Ll:0};
+  let p=lp(L,0),n=0;for(let k=1;k<=160;k++){const q=lp(L,k/160*TP);n+=Math.hypot(q.x-p.x,q.y-p.y,q.z-p.z);p=q}
+  L.Ll=n;sh+=n;loops.push(L)}
+ bridges=[];const an=[...ch];
+ for(let k=0;k<t.bridges;k++){let best=null,bd=0;for(let c=26;c<gl-26;c+=3){const md=Math.min(gl,...an.map(a=>{const d=Math.abs(c-a);return Math.min(d,gl-d)}));if(md>bd){bd=md;best=c}}if(best===null||bd<Math.max(LC,40))break;bridges.push(best);an.push(best)}
+ len=gl+sh;const N=Math.round(len/.42);FR=[];for(let i=0;i<=N;i++)FR.push(fr(i/N*len));
+ for(const L of loops)for(const th of[Math.PI/2,Math.PI*1.5]){const p=lp(L,th);box(1.6,p.y-.2,1.6,0xffd400,p.x,(p.y-.2)/2,p.z,trackG)}
+ for(let i=0;i<N;i+=9){const F=FR[i];if(F.In||F.P.y<1)continue;for(const o of[-W+1,W-1])box(1.2,F.P.y,1.2,0xffd400,F.P.x+F.R.x*o,F.P.y/2,F.P.z+F.R.z*o,trackG)}
+ ribbon(trackG,-W,W,.2,i=>i%8<4?0xff7a00:0xff9a33,N);
+ const cb=i=>i%4<2?0xe3000b:0xffffff;ribbon(trackG,-W-.9,-W,.3,cb,N);ribbon(trackG,W,W+.9,.3,cb,N);
+ const F0=FR[0],sl=new THREE.Group();
+ for(let i=0;i<9;i++)box(1,.06,1.5,i%2?0x111111:0xffffff,-W+.5+i,.25,0,sl);
+ sl.position.copy(F0.P);sl.rotation.y=Math.atan2(-F0.T.x,-F0.T.z);trackG.add(sl);
+ pts=[];for(let i=0;i<90;i++)pts.push(FR[Math.floor(i/90*N)].P);
+ let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647,cols=[0xe3000b,0x0055bf,0xffd400,0xffffff];
+ for(let n=0;n<70;n++){const x=(rnd()-.5)*130,z=(rnd()-.5)*130;if(pts.some(p=>Math.hypot(p.x-x,p.z-z)<12))continue;
+  const c=cols[n%4],h=1+(rnd()*3|0);for(let j=0;j<h;j++){box(2,1,4,c,x,.5+j,z,trackG);studs(trackG,2,4,1+j,c)}}
+ S.add(trackG)}
+// game state
+const sel={car:0,track:0};let chal=null,pname='';const GAME_URL='https://claude.ai/artifact/Q4mKV4d3foKtoVPd9jxaHc';let G={};
+function mk(el,arr,key){el.innerHTML='';arr.forEach((a,i)=>{const b=document.createElement('button');b.className='opt'+(sel[key]==i?' sel':'');
+ b.innerHTML=(a.c?`<span class="chip" style="background:#${a.c.toString(16).padStart(6,'0')}"></span>`:'')+a.n+`<small>${a.d}</small>`;
+ b.onclick=()=>{sel[key]=i;setup();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track')};el.appendChild(b)})}
+function best(){try{return +localStorage.getItem('br'+sel.track)||0}catch(e){return 0}}
+function setup(){buildTrack(TRACKS[sel.track]);buildCar(CARS[sel.car]);
+ G={mode:'menu',u:0,off:0,v:0,lap:1,t:0,spin:0,boost:0,grass:0,cd:3.2,qT:4,qA:0,qL:0,qK:'',camI:0,camT:5,ct:0,msgT:0,look:new THREE.Vector3(),bt:0,keys:{}}}
+const QK=[['Space','SPACE'],['KeyQ','Q'],['KeyE','E'],['KeyF','F'],['KeyR','R']];
+const MQ=[['up','SWIPE UP'],['down','SWIPE DOWN'],['left','SWIPE LEFT'],['right','SWIPE RIGHT'],['dtap','DOUBLE TAP'],['hold','HOLD']];
+function qhit(c){if(!G.qA)return;if(c==G.qK){G.boost=1.8;G.v+=6;G.qA=0;G.qT=4+Math.random()*3;$('qte').style.display='none';say('NICE! BOOST',.8)}else fail('WRONG MOVE!')}
+function say(s,t){$('msg').textContent=s;G.msgT=t||1}
+function fail(s){G.spin=1;G.v*=.4;G.off+=(Math.random()<.5?-1:1)*2;G.qA=0;G.qT=4+Math.random()*3;$('qte').style.display='none';say(s||'SPIN OUT!')}
+addEventListener('keydown',e=>{if(!G.keys)return;G.keys[e.code]=1;
+ if(G.mode=='run'){if(/Arrow|Space/.test(e.code))e.preventDefault();
+  if(G.qA&&QK.some(q=>q[0]==e.code)){if(e.code==G.qK){G.boost=1.8;G.v+=6;G.qA=0;G.qT=4+Math.random()*3;$('qte').style.display='none';say('NICE! BOOST',.8)}else fail('WRONG KEY!')}}});
+addEventListener('keyup',e=>{if(G.keys)G.keys[e.code]=0});
+function begin(){setup();G.mode='count';$('menu').style.display=$('end').style.display='none';$('hud').style.display='flex';if(MOB)$('tc').style.display='block'}
+$('again').onclick=begin;
+$('tomenu').onclick=()=>{setup();$('end').style.display='none';$('hud').style.display='none';$('menu').style.display='flex'};
+function finish(){$('tc').style.display='none';G.mode='done';const b=best();let s=G.t.toFixed(2)+'s';
+ if(!b||G.t<b){try{localStorage.setItem('br'+sel.track,G.t)}catch(e){}s+=' (new best!)'}else s+=' (best '+b.toFixed(2)+'s)';
+ let m=pname+': '+s+' on '+TRACKS[sel.track].n+'.';
+ if(chal&&chal.t==sel.track)m+=G.t<chal.s?' You beat '+chal.n+' by '+(chal.s-G.t).toFixed(2)+'s!':' '+chal.n+' still wins by '+(G.t-chal.s).toFixed(2)+'s.';
+ $('es').textContent=m;
+ const code=btoa(encodeURIComponent(JSON.stringify({n:pname,t:sel.track,s:+G.t.toFixed(2)})));
+ $('lnk').value=pname+' did '+G.t.toFixed(2)+'s on '+TRACKS[sel.track].n+' in Brick Racers. Beat me!\n'+GAME_URL+'\nChallenge code (paste it on the start screen): '+code;
+ $('sh').textContent='';$('end').style.display='flex'}
+$('share').onclick=async()=>{const t=$('lnk').value;try{if(navigator.share){await navigator.share({text:t});return}}catch(e){}
+ try{await navigator.clipboard.writeText(t);$('sh').textContent='Copied! Send it to a friend.'}catch(e){$('lnk').select();$('sh').textContent='Copy the text above and send it to a friend.'}};
+const K=c=>G.keys[c]?1:0,up=new THREE.Vector3(0,1,0),clk=new THREE.Clock();
+function showChal(){$('chb').textContent=chal?chal.n+' challenges you: beat '+chal.s.toFixed(2)+'s on '+TRACKS[chal.t].n+'!':''}
+$('cc').oninput=()=>{const v=$('cc').value.trim();chal=null;try{if(v){const o=JSON.parse(decodeURIComponent(atob(v)));if(TRACKS[o.t|0]&&isFinite(o.s)){chal={n:String(o.n).slice(0,16),t:o.t|0,s:+o.s};sel.track=chal.t;setup();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track')}}}catch(e){}
+ showChal();if(v&&!chal)$('chb').textContent='That code looks invalid.'};
+$('start').onclick=()=>{const n=$('nm').value.trim();if(!n){$('nm').focus();$('nmh').textContent='Enter your name to race.';return}
+ pname=n.slice(0,16);try{localStorage.setItem('brName',pname)}catch(e){}$('nmh').textContent='';begin()};
+{window.HOWK=$('how').innerHTML;window.HOWT='<p>The car drives itself. Hold <b>◀ ▶</b> (bottom left) to steer and <b>BRAKE</b> (bottom right) to slow down. Turn your phone sideways.</p><p>When a prompt like <b>SWIPE UP</b>, <b>DOUBLE TAP</b> or <b>HOLD</b> appears, do it fast on the screen for a boost. Miss it and you spin out.</p><p>The camera flips between back view and top view, and moves to the side for loops. Loops need 60+ km/h, so avoid braking before them. Bridges slow you on the way up and speed you up on the way down.</p>';
+ [['bl','ArrowLeft'],['br','ArrowRight'],['bb','ArrowDown']].forEach(([id,c])=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();G.keys[c]=1});
+  ['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,()=>{G.keys[c]=0}));b.addEventListener('contextmenu',e=>e.preventDefault())});
+ let t0=null,lt=0,hd=0;const far=t=>Math.hypot(t.clientX-t0.x,t.clientY-t0.y)>40;
+ addEventListener('touchstart',e=>{if(!MOB)return;if(e.target.closest&&e.target.closest('.ctl'))return;const t=e.changedTouches[0];t0={x:t.clientX,y:t.clientY};clearTimeout(hd);hd=setTimeout(()=>{if(t0){qhit('hold');t0=null}},550)},{passive:true});
+ addEventListener('touchmove',e=>{if(t0&&far(e.changedTouches[0]))clearTimeout(hd)},{passive:true});
+ addEventListener('touchend',e=>{clearTimeout(hd);if(!t0)return;const t=e.changedTouches[0],dx=t.clientX-t0.x,dy=t.clientY-t0.y,n=Date.now();
+  if(far(t))qhit(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));else if(n-lt<320){qhit('dtap');lt=0}else lt=n;t0=null},{passive:true})}
+function applyMode(){document.documentElement.classList.toggle('mob',MOB);$('how').innerHTML=MOB?HOWT:HOWK;$('mt').classList.toggle('sel',MOB);$('mk').classList.toggle('sel',!MOB);if(!MOB)$('tc').style.display='none';else if(G.mode=='run'||G.mode=='count')$('tc').style.display='block'}
+function setMode(m){MOB=m;try{localStorage.setItem('brMode',m?'touch':'keys')}catch(e){}applyMode()}
+$('mk').onclick=$('rk').onclick=()=>setMode(false);$('mt').onclick=()=>setMode(true);
+try{const m=localStorage.getItem('brMode');if(m)MOB=m=='touch'}catch(e){}
+function frame(){requestAnimationFrame(frame);const pt=MOB&&innerHeight>innerWidth;$('rot').style.display=pt?'flex':'none';if(pt){clk.getDelta();return}const dt=Math.min(clk.getDelta(),.05),d=CARS[sel.car];G.ct+=dt;
+ let s=G.u*len,F=fr(s);
+ if(G.mode=='count'){G.cd-=dt;const n=Math.ceil(G.cd);if(G.cd<=0){G.mode='run';say('GO!',.8)}else $('msg').textContent=n}
+ if(G.mode=='run'||G.mode=='done'){
+  const run=G.mode=='run',acc=run&&(MOB||K('KeyW')||K('ArrowUp')),brk=run&&(K('KeyS')||K('ArrowDown')),steer=run&&G.spin<=0?K('KeyD')+K('ArrowRight')-K('KeyA')-K('ArrowLeft'):0;
+  G.grass=!F.In&&Math.abs(G.off)>W-.6;G.boost=Math.max(0,G.boost-dt);
+  const mx=30*d.sp*(G.boost>0?1.35:1)*(G.grass?.45:1);
+  if(acc)G.v+=22*dt;else G.v-=(run?6:14)*dt;if(brk)G.v-=35*dt;if(!F.In)G.v-=F.T.y*10*dt;
+  if(G.v>mx)G.v-=30*dt;G.v=Math.max(0,G.v);
+  if(G.spin>0){G.spin-=dt;G.v*=1-1.5*dt}
+  G.off+=steer*7*d.hd*dt*(G.v>2?1:.3);
+  if(F.In)G.off=Math.max(-W+1,Math.min(W-1,G.off));
+  else{const F1=fr(s+2),turn=F1.In?0:F1.T.clone().sub(F.T).dot(F.R)/2;G.off-=turn*G.v*G.v*(MOB?.027:.045)*dt;
+   if(Math.abs(G.off)>W+5){G.off=0;G.v=0;G.t+=2;say('BACK ON TRACK +2s',1.2)}}
+  const ds=G.v*dt;
+  if(run)for(const L of loops)if(s<L.sw&&s+ds>=L.sw&&G.v<15){G.u=Math.max(0,(L.sw-18)/len);G.v=0;G.off=0;say('TOO SLOW! HIT LOOPS AT 60+',1.4);break}
+  G.u+=G.v*dt/len;if(G.u>=1){G.u-=1;if(run){G.lap++;if(G.lap>LAPS){G.lap=LAPS;finish()}else say('LAP '+G.lap,1)}}
+  if(run){G.t+=dt;
+   if(G.qA){G.qL-=dt;$('bar').firstChild.style.width=Math.max(0,G.qL/1.8*100)+'%';if(G.qL<=0)fail('TOO SLOW!')}
+   else{G.qT-=dt;if(G.qT<=0){const ql=MOB?MQ:QK,q=ql[Math.random()*ql.length|0];G.qK=q[0];$('qk').textContent=q[1];G.qA=1;G.qL=1.8;$('qte').style.display='block'}}
+   G.camT-=dt;if(G.camT<=0){G.camI=1-G.camI;G.camT=3+Math.random()*3}}
+ }
+ if(G.msgT>0){G.msgT-=dt;if(G.msgT<=0&&G.mode!='count')$('msg').textContent=''}
+ F=fr(G.u*len);const C=F.P.clone().addScaledVector(F.U,.2).addScaledVector(F.R,G.off),T=F.T,U=F.U;
+ carG.position.copy(C);carG.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(F.R,F.U,T.clone().negate()));
+ if(G.spin>0)carG.rotateY((1-G.spin)*Math.PI*4);
+ const fl=Vv(T.x,0,T.z);if(fl.length()>.3)G.fd=fl.normalize();else if(!G.fd)G.fd=Vv(0,0,-1);
+ const Lc=loops.find(L=>F.In===L||((L.sw-G.u*len)%len+len)%len<22),bk=!!Lc;let cp,lk,tu=up;const a=G.ct*.5,mn=G.mode=='menu'?1:1-Math.exp(-(bk?7:G.mode=='run'?4:3)*dt);
+ if(G.mode=='menu'){cp=Vv(C.x+Math.cos(a)*9,4,C.z+Math.sin(a)*9);lk=Vv(C.x,C.y-4.5,C.z)}
+ else if(Lc){const M=Vv(Lc.B.x,RL,Lc.B.z);cp=Vv(M.x+Lc.r.x*30,RL+1,M.z+Lc.r.z*30);lk=M}
+ else if(G.camI==0){cp=C.clone().addScaledVector(T,-10).addScaledVector(U,5);lk=C.clone().addScaledVector(T,8);tu=U}
+ else{cp=Vv(C.x-G.fd.x*5,C.y+32,C.z-G.fd.z*5);lk=C.clone().addScaledVector(G.fd,4)}
+ cam.position.lerp(cp,mn);G.look.lerp(lk,mn);cam.up.lerp(tu,mn).normalize();cam.lookAt(G.look);
+ cam.fov=65+Math.min(G.v,40)*.25;cam.updateProjectionMatrix();
+ $('lap').textContent='LAP '+G.lap+'/'+LAPS;$('tm').textContent=G.t.toFixed(1)+'s';$('sp').textContent=Math.round(G.v*4)+' km/h';$('cam').textContent=(Lc?'Side view':CAMS[G.camI]);
+ R.render(S,cam)}
+setup();applyMode();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track');try{$('nm').value=localStorage.getItem('brName')||''}catch(e){}frame();
+</script></body></html>
