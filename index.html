@@ -28,19 +28,15 @@ p{margin:4px 0;font-size:14px;line-height:1.4}
 #bar{height:10px;background:#1a1a2e;border-radius:5px;overflow:hidden}#bar i{display:block;height:100%;background:var(--r)}
 #menu{align-items:flex-end}#menu .card{max-height:58vh;overflow:auto;margin-bottom:6px}input,textarea{width:100%;box-sizing:border-box;font:inherit;padding:9px;border:3px solid #1a1a2e;border-radius:6px;background:#fff;color:#1a1a2e}#chb,#nmh,#sh{font-weight:800;color:var(--r);min-height:1em}
 .keys{display:flex;flex-wrap:wrap;gap:8px 18px;margin:6px 0}.keys span{display:flex;align-items:center;gap:4px;font-weight:700;font-size:14px}kbd{display:inline-block;min-width:26px;padding:3px 7px;text-align:center;font:700 13px "Trebuchet MS",sans-serif;background:#fff;color:#1a1a2e;border:2px solid #1a1a2e;border-bottom-width:4px;border-radius:5px}
-canvas{touch-action:none}.mob #qte{bottom:calc(env(safe-area-inset-bottom,0px) + 120px)}.mob #qte b{font-size:22px}
-#tc button{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);width:88px;height:88px;border-radius:50%;font:800 34px "Trebuchet MS",sans-serif;background:rgba(255,212,0,.88);color:#1a1a2e;border:4px solid #1a1a2e;box-shadow:0 5px 0 #1a1a2e;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-#bl{left:16px}#br{left:120px}#bb{right:16px;background:rgba(227,0,11,.9)!important;color:#fff!important;font-size:16px!important}
+canvas{touch-action:none}
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="hud"><span id="lap"></span><span id="tm"></span><span id="sp"></span><span id="cam"></span></div>
 <div id="msg"></div>
 <div id="qte"><div>PRESS NOW!</div><b id="qk"></b><div id="bar"><i></i></div></div>
-<div id="tc" style="display:none"><button class="ctl" id="bl" aria-label="Steer left">◀</button><button class="ctl" id="br" aria-label="Steer right">▶</button><button class="ctl" id="bb">BRAKE</button></div>
 <div class="ov" id="menu"><div class="card">
 <h1>BRICK RACERS</h1><p>Build-block cars, orange tracks. Race 3 laps. No login.</p>
 <h2>Your name</h2><input id="nm" maxlength="16" placeholder="Enter your name" autocomplete="off"><p id="nmh"></p>
-<h2>How are you playing?</h2><div class="row"><button class="opt" id="mk">Keys<small>Computer or keyboard</small></button><button class="opt" id="mt">Touch<small>Phone or tablet, held sideways</small></button></div>
 <h2>Pick a car</h2><div class="row" id="cars"></div>
 <h2>Pick a track</h2><div class="row" id="tracks"></div>
 <h2>How to play</h2><div id="how">
@@ -52,10 +48,10 @@ canvas{touch-action:none}.mob #qte{bottom:calc(env(safe-area-inset-bottom,0px) +
 <h2>Challenge a friend</h2><textarea id="lnk" rows="4" readonly></textarea><p id="sh"></p>
 <button class="go" id="share" style="background:var(--b)">Challenge a friend</button>
 <button class="go" id="again">Race again</button><button class="go" id="tomenu" style="background:#555">Change car or track</button></div></div>
-<div id="rot" class="ov" style="display:none;z-index:50;background:var(--bg)"><div class="card" style="text-align:center"><h1>Rotate your screen</h1><p>Touch controls need landscape. Turn your device sideways to keep playing.</p><button class="go" id="rk" style="background:var(--b)">Use keys instead</button></div></div>
+<div id="mobblock" class="ov" style="display:none;z-index:50;background:var(--bg)"><div class="card" style="text-align:center"><h1>Keyboard needed</h1><p>Brick Racers needs a keyboard to play. Please open this page on a computer.</p></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-let MOB=matchMedia('(pointer:coarse)').matches;const $=id=>document.getElementById(id),LAPS=3,W=4.5;
+const MOB=matchMedia('(pointer:coarse)').matches,$=id=>document.getElementById(id),LAPS=3,W=4.5;
 const CARS=[
 {n:'Speedster',c:0xe3000b,L:4.2,W:2,H:.8,cab:1,sp:1,hd:1,x:'spoil',d:'Balanced'},
 {n:'Brick Truck',c:0x0055bf,L:4.6,W:2.3,H:1.3,cab:1.3,sp:.85,hd:.8,x:'bed',d:'Slow, sturdy'},
@@ -143,15 +139,13 @@ function best(){try{return +localStorage.getItem('br'+sel.track)||0}catch(e){ret
 function setup(){buildTrack(TRACKS[sel.track]);buildCar(CARS[sel.car]);
  G={mode:'menu',u:0,off:0,v:0,lap:1,t:0,spin:0,boost:0,grass:0,cd:3.2,qT:4,qA:0,qL:0,qK:'',camI:0,camT:5,ct:0,msgT:0,look:new THREE.Vector3(),bt:0,keys:{}}}
 const QK=[['Space','SPACE'],['KeyQ','Q'],['KeyE','E'],['KeyF','F'],['KeyR','R']];
-const MQ=[['up','SWIPE UP'],['down','SWIPE DOWN'],['left','SWIPE LEFT'],['right','SWIPE RIGHT'],['dtap','DOUBLE TAP'],['hold','HOLD']];
-function qhit(c){if(!G.qA)return;if(c==G.qK){G.boost=1.8;G.v+=6;G.qA=0;G.qT=4+Math.random()*3;$('qte').style.display='none';say('NICE! BOOST',.8)}else fail('WRONG MOVE!')}
 function say(s,t){$('msg').textContent=s;G.msgT=t||1}
 function fail(s){G.spin=1;G.v*=.4;G.off+=(Math.random()<.5?-1:1)*2;G.qA=0;G.qT=4+Math.random()*3;$('qte').style.display='none';say(s||'SPIN OUT!')}
 addEventListener('keydown',e=>{if(!G.keys)return;G.keys[e.code]=1;
  if(G.mode=='run'){if(/Arrow|Space/.test(e.code))e.preventDefault();
   if(G.qA&&QK.some(q=>q[0]==e.code)){if(e.code==G.qK){G.boost=1.8;G.v+=6;G.qA=0;G.qT=4+Math.random()*3;$('qte').style.display='none';say('NICE! BOOST',.8)}else fail('WRONG KEY!')}}});
 addEventListener('keyup',e=>{if(G.keys)G.keys[e.code]=0});
-function begin(){setup();G.mode='count';$('menu').style.display=$('end').style.display='none';$('hud').style.display='flex';if(MOB)$('tc').style.display='block'}
+function begin(){setup();G.mode='count';$('menu').style.display=$('end').style.display='none';$('hud').style.display='flex'}
 $('again').onclick=begin;
 $('tomenu').onclick=()=>{setup();$('end').style.display='none';$('hud').style.display='none';$('menu').style.display='flex'};
 function finish(){$('tc').style.display='none';G.mode='done';const b=best();let s=G.t.toFixed(2)+'s';
@@ -170,23 +164,11 @@ $('cc').oninput=()=>{const v=$('cc').value.trim();chal=null;try{if(v){const o=JS
  showChal();if(v&&!chal)$('chb').textContent='That code looks invalid.'};
 $('start').onclick=()=>{const n=$('nm').value.trim();if(!n){$('nm').focus();$('nmh').textContent='Enter your name to race.';return}
  pname=n.slice(0,16);try{localStorage.setItem('brName',pname)}catch(e){}$('nmh').textContent='';begin()};
-{window.HOWK=$('how').innerHTML;window.HOWT='<p>The car drives itself. Hold <b>◀ ▶</b> (bottom left) to steer and <b>BRAKE</b> (bottom right) to slow down. Turn your phone sideways.</p><p>When a prompt like <b>SWIPE UP</b>, <b>DOUBLE TAP</b> or <b>HOLD</b> appears, do it fast on the screen for a boost. Miss it and you spin out.</p><p>The camera flips between back view and top view, and moves to the side for loops. Loops need 60+ km/h, so avoid braking before them. Bridges slow you on the way up and speed you up on the way down.</p>';
- [['bl','ArrowLeft'],['br','ArrowRight'],['bb','ArrowDown']].forEach(([id,c])=>{const b=$(id);b.addEventListener('pointerdown',e=>{e.preventDefault();G.keys[c]=1});
-  ['pointerup','pointercancel','pointerleave'].forEach(n=>b.addEventListener(n,()=>{G.keys[c]=0}));b.addEventListener('contextmenu',e=>e.preventDefault())});
- let t0=null,lt=0,hd=0;const far=t=>Math.hypot(t.clientX-t0.x,t.clientY-t0.y)>40;
- addEventListener('touchstart',e=>{if(!MOB)return;if(e.target.closest&&e.target.closest('.ctl'))return;const t=e.changedTouches[0];t0={x:t.clientX,y:t.clientY};clearTimeout(hd);hd=setTimeout(()=>{if(t0){qhit('hold');t0=null}},550)},{passive:true});
- addEventListener('touchmove',e=>{if(t0&&far(e.changedTouches[0]))clearTimeout(hd)},{passive:true});
- addEventListener('touchend',e=>{clearTimeout(hd);if(!t0)return;const t=e.changedTouches[0],dx=t.clientX-t0.x,dy=t.clientY-t0.y,n=Date.now();
-  if(far(t))qhit(Math.abs(dx)>Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'));else if(n-lt<320){qhit('dtap');lt=0}else lt=n;t0=null},{passive:true})}
-function applyMode(){document.documentElement.classList.toggle('mob',MOB);$('how').innerHTML=MOB?HOWT:HOWK;$('mt').classList.toggle('sel',MOB);$('mk').classList.toggle('sel',!MOB);if(!MOB)$('tc').style.display='none';else if(G.mode=='run'||G.mode=='count')$('tc').style.display='block'}
-function setMode(m){MOB=m;try{localStorage.setItem('brMode',m?'touch':'keys')}catch(e){}applyMode()}
-$('mk').onclick=$('rk').onclick=()=>setMode(false);$('mt').onclick=()=>setMode(true);
-try{const m=localStorage.getItem('brMode');if(m)MOB=m=='touch'}catch(e){}
-function frame(){requestAnimationFrame(frame);const pt=MOB&&innerHeight>innerWidth;$('rot').style.display=pt?'flex':'none';if(pt){clk.getDelta();return}const dt=Math.min(clk.getDelta(),.05),d=CARS[sel.car];G.ct+=dt;
+function frame(){requestAnimationFrame(frame);$('mobblock').style.display=MOB?'flex':'none';if(MOB){clk.getDelta();return}const dt=Math.min(clk.getDelta(),.05),d=CARS[sel.car];G.ct+=dt;
  let s=G.u*len,F=fr(s);
  if(G.mode=='count'){G.cd-=dt;const n=Math.ceil(G.cd);if(G.cd<=0){G.mode='run';say('GO!',.8)}else $('msg').textContent=n}
  if(G.mode=='run'||G.mode=='done'){
-  const run=G.mode=='run',acc=run&&(MOB||K('KeyW')||K('ArrowUp')),brk=run&&(K('KeyS')||K('ArrowDown')),steer=run&&G.spin<=0?K('KeyD')+K('ArrowRight')-K('KeyA')-K('ArrowLeft'):0;
+  const run=G.mode=='run',acc=run&&(K('KeyW')||K('ArrowUp')),brk=run&&(K('KeyS')||K('ArrowDown')),steer=run&&G.spin<=0?K('KeyD')+K('ArrowRight')-K('KeyA')-K('ArrowLeft'):0;
   G.grass=!F.In&&Math.abs(G.off)>W-.6;G.boost=Math.max(0,G.boost-dt);
   const mx=30*d.sp*(G.boost>0?1.35:1)*(G.grass?.45:1);
   if(acc)G.v+=22*dt;else G.v-=(run?6:14)*dt;if(brk)G.v-=35*dt;if(!F.In)G.v-=F.T.y*10*dt;
@@ -194,14 +176,14 @@ function frame(){requestAnimationFrame(frame);const pt=MOB&&innerHeight>innerWid
   if(G.spin>0){G.spin-=dt;G.v*=1-1.5*dt}
   G.off+=steer*7*d.hd*dt*(G.v>2?1:.3);
   if(F.In)G.off=Math.max(-W+1,Math.min(W-1,G.off));
-  else{const F1=fr(s+2),turn=F1.In?0:F1.T.clone().sub(F.T).dot(F.R)/2;G.off-=turn*G.v*G.v*(MOB?.027:.045)*dt;
+  else{const F1=fr(s+2),turn=F1.In?0:F1.T.clone().sub(F.T).dot(F.R)/2;G.off-=turn*G.v*G.v*.045*dt;
    if(Math.abs(G.off)>W+5){G.off=0;G.v=0;G.t+=2;say('BACK ON TRACK +2s',1.2)}}
   const ds=G.v*dt;
   if(run)for(const L of loops)if(s<L.sw&&s+ds>=L.sw&&G.v<15){G.u=Math.max(0,(L.sw-18)/len);G.v=0;G.off=0;say('TOO SLOW! HIT LOOPS AT 60+',1.4);break}
   G.u+=G.v*dt/len;if(G.u>=1){G.u-=1;if(run){G.lap++;if(G.lap>LAPS){G.lap=LAPS;finish()}else say('LAP '+G.lap,1)}}
   if(run){G.t+=dt;
    if(G.qA){G.qL-=dt;$('bar').firstChild.style.width=Math.max(0,G.qL/1.8*100)+'%';if(G.qL<=0)fail('TOO SLOW!')}
-   else{G.qT-=dt;if(G.qT<=0){const ql=MOB?MQ:QK,q=ql[Math.random()*ql.length|0];G.qK=q[0];$('qk').textContent=q[1];G.qA=1;G.qL=1.8;$('qte').style.display='block'}}
+   else{G.qT-=dt;if(G.qT<=0){const q=QK[Math.random()*QK.length|0];G.qK=q[0];$('qk').textContent=q[1];G.qA=1;G.qL=1.8;$('qte').style.display='block'}}
    G.camT-=dt;if(G.camT<=0){G.camI=1-G.camI;G.camT=3+Math.random()*3}}
  }
  if(G.msgT>0){G.msgT-=dt;if(G.msgT<=0&&G.mode!='count')$('msg').textContent=''}
@@ -218,5 +200,5 @@ function frame(){requestAnimationFrame(frame);const pt=MOB&&innerHeight>innerWid
  cam.fov=65+Math.min(G.v,40)*.25;cam.updateProjectionMatrix();
  $('lap').textContent='LAP '+G.lap+'/'+LAPS;$('tm').textContent=G.t.toFixed(1)+'s';$('sp').textContent=Math.round(G.v*4)+' km/h';$('cam').textContent=(Lc?'Side view':CAMS[G.camI]);
  R.render(S,cam)}
-setup();applyMode();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track');try{$('nm').value=localStorage.getItem('brName')||''}catch(e){}frame();
+setup();mk($('cars'),CARS,'car');mk($('tracks'),TRACKS,'track');try{$('nm').value=localStorage.getItem('brName')||''}catch(e){}frame();
 </script></body></html>
